@@ -12,8 +12,7 @@
 #load "gl_layer.p";
 #load "draw.p";
 
-sin :: foreign (angle: f64) -> f64;
-
+sinf :: foreign (angle: f32) -> f32;
 MAX_SHADERS :: 32;
 
 State :: struct {
@@ -57,8 +56,14 @@ main :: () -> s64 {
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        draw_quad(*quad_vao, basic_shader, v2f(0, 0), framebuffer_size.y, v4f(1, 0, 0, 1));
-        draw_circle(*quad_vao, circle_shader, v2f(100, 100), framebuffer_size.y / 4, v4f(0, 1, 0, 1));
+        time: f32 = xx timeGetTime() / 1000.0;
+        f: f32 = 1.0;
+        r := sinf(f * time) * 0.5 + 0.5;
+        g := sinf(f * time + 2) * 0.5 + 0.5;
+        b := sinf(f * time + 4) * 0.5 + 0.5;
+
+        draw_quad(*quad_vao, basic_shader, v2f(0, 0), framebuffer_size.y, v4f(0, 0, 0, 1));
+        draw_circle(*quad_vao, circle_shader, v2f(100, 100), framebuffer_size.y / 4, v4f(r, g, b, 1));
 
         swap_gl_buffers(*window);
     }
