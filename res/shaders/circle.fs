@@ -11,7 +11,6 @@ void main()
     vec4 out_color = color;
     vec2 frag_pos = gl_FragCoord.xy;
     float distance = length((center - 0.5) - frag_pos) - radius + 1.0;
-    float alpha = 1.0 - clamp(distance, 0.0, 1.0);
-    out_color.a = alpha;
+    out_color.a = 1.0 - smoothstep(-1.5, 0.0, distance);
     FragColor = out_color;
 }

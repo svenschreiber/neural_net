@@ -7,7 +7,7 @@ Rendering:
 - [x] shaders
 - [x] drawing quads
 - [x] drawing simple circles
-- [ ] drawing lines
+- [x] drawing lines
 
 Neural Network:
 - [ ] basic neuron setup

@@ -22,7 +22,19 @@ m4f_translate :: (matrix: *m4f, translation: v3f) {
 m4f_scale :: (matrix: *m4f, scale: f32) {
     matrix.data[0]  = scale;
     matrix.data[5]  = scale;
-    matrix.data[10] = scale;
+    matrix.data[10] = 1;
+}
+
+m4f_scale_xy :: (matrix: *m4f, scale_x: f32, scale_y: f32) {
+    matrix.data[0]  = scale_x;
+    matrix.data[5]  = scale_y;
+    matrix.data[10] = 1;
+}
+
+// TODO: rotations
+m4f_transform :: (matrix: *m4f, translation: v3f, scale: f32) {
+    m4f_translate(matrix, translation);
+    m4f_scale(matrix, scale);
 }
 
 m4f_ortho :: (left: f32, right: f32, bottom: f32, top: f32, near: f32, far: f32) -> m4f {

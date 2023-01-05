@@ -36,6 +36,7 @@ main :: () -> s64 {
 
     basic_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/basic.fs");
     circle_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/circle.fs");
+    line_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/line.fs");
 
     update_projection(*state, framebuffer_size);
     
@@ -56,14 +57,9 @@ main :: () -> s64 {
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        time: f32 = xx timeGetTime() / 1000.0;
-        f: f32 = 1.0;
-        r := sinf(f * time) * 0.5 + 0.5;
-        g := sinf(f * time + 2) * 0.5 + 0.5;
-        b := sinf(f * time + 4) * 0.5 + 0.5;
-
-        draw_quad(*quad_vao, basic_shader, v2f(0, 0), framebuffer_size.y, v4f(0, 0, 0, 1));
-        draw_circle(*quad_vao, circle_shader, v2f(100, 100), framebuffer_size.y / 4, v4f(r, g, b, 1));
+        draw_quad(*quad_vao, basic_shader, v2f(0, 0), framebuffer_size.y, v4f(1, .8, .8, 1));
+        draw_circle(*quad_vao, circle_shader, v2f(100, 100), framebuffer_size.y / 4, v4f(1, 1, 1, 1));
+        draw_line(*quad_vao, line_shader, v2f(900 * sinf(xx timeGetTime() / 1000), 200), v2f(450, 300 * sinf(xx timeGetTime() / 1000)), v4f(0, 0, 0, 1), 5);
 
         swap_gl_buffers(*window);
     }
