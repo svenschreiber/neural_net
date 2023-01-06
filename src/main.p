@@ -1,6 +1,5 @@
 #load "basic.p";
 #load "window.p";
-#load "platform.p";
 #load "gl/wgl.p";
 #load "gl/gl.p";
 #load "gl_context.p";
@@ -11,6 +10,10 @@
 #load "shader.p";
 #load "gl_layer.p";
 #load "draw.p";
+
+#if PLATFORM == Platform.Windows {
+    #load "platform/win32.p";
+}
 
 sinf :: foreign (angle: f32) -> f32;
 MAX_SHADERS :: 32;
@@ -23,11 +26,12 @@ State :: struct {
 main :: () -> s64 {
     window: Window = ---;
     create_window(*window, "neural_net", 1280, 720);
-
     create_gl_context(*window);
     load_gl_procedures();
     load_custom_gl_procedures();
     set_vsync(true);
+
+    init_time();
 
     state: State;
 
@@ -59,7 +63,7 @@ main :: () -> s64 {
 
         draw_quad(*quad_vao, basic_shader, v2f(0, 0), framebuffer_size.y, v4f(1, .8, .8, 1));
         draw_circle(*quad_vao, circle_shader, v2f(100, 100), framebuffer_size.y / 4, v4f(1, 1, 1, 1));
-        draw_line(*quad_vao, line_shader, v2f(900 * sinf(xx timeGetTime() / 1000), 200), v2f(450, 300 * sinf(xx timeGetTime() / 1000)), v4f(0, 0, 0, 1), 5);
+        draw_line(*quad_vao, line_shader, v2f(900, 200), v2f(450, 300), v4f(0, 0, 0, 1), 5);
 
         swap_gl_buffers(*window);
     }

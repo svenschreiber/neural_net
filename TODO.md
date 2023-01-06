@@ -1,7 +1,7 @@
 # Todo List
 
 General:
-- [ ] proper time querying
+- [x] proper time querying
 
 Rendering:
 - [x] shaders
