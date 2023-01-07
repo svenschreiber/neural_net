@@ -1,8 +1,8 @@
 INPUTS :: 2;
 OUTPUTS :: 1;
-HIDDEN_LAYERS :: 1;
-NEURONS_PER_HIDDEN_LAYER :: 2;
-LEARNING_RATE :: 0.1;
+HIDDEN_LAYERS :: 2;
+NEURONS_PER_HIDDEN_LAYER :: 4;
+LEARNING_RATE :: 0.15;
 
 Layer :: struct {
     activations: *f64;
@@ -14,12 +14,11 @@ Layer :: struct {
 }
 
 Neural_Network :: struct {
-    layers: *Layer;
+    layers: []Layer;
     num_inputs: u32;
     num_hidden_layers: u32;
     num_neurons_per_hidden_layer: u32;
     num_outputs: u32;
-    num_layers: u32;
 }
 
 get_random_f64_zero_to_one :: () -> f64 {
@@ -44,16 +43,15 @@ init_neural_network :: (net: *Neural_Network) {
     net.num_hidden_layers = HIDDEN_LAYERS;
     net.num_neurons_per_hidden_layer = NEURONS_PER_HIDDEN_LAYER;
     net.num_outputs = OUTPUTS;
-    net.num_layers = HIDDEN_LAYERS + 2;
 
-    srand(0);
+    srand(time(null));
 
-    net.layers = xx malloc(net.num_layers * size_of(Layer));
+    net.layers = allocate_array(HIDDEN_LAYERS + 2, Layer);
     layers: *Layer = net.layers;
 
-    for i: s64 = net.num_layers - 1; i >= 0; --i {
+    for i: s64 = net.layers.count - 1; i >= 0; --i {
         layer := *layers[i];
-        if i == net.num_layers - 1 {
+        if i == net.layers.count - 1 {
             layer.num_neurons = net.num_outputs;
             layer.num_weights_per_neuron = 0;
         } else if i == 0 {
@@ -65,28 +63,30 @@ init_neural_network :: (net: *Neural_Network) {
         }
 
         layer.activations = xx malloc(layer.num_neurons * size_of(f64));
-        layer.errors      = xx malloc(layer.num_neurons * size_of(f64));
-        layer.biases      = xx malloc(layer.num_neurons * size_of(f64));
         layer.weights     = xx malloc(layer.num_neurons * layer.num_weights_per_neuron * size_of(f64));
+        if (i > 0) {
+            layer.errors  = xx malloc(layer.num_neurons * size_of(f64)); 
+            layer.biases  = xx malloc(layer.num_neurons * size_of(f64)); 
+        }
 
         for j := 0; j < layer.num_neurons; ++j {
             for k := 0; k < layer.num_weights_per_neuron; ++k {
                 layer.weights[j * layer.num_weights_per_neuron + k] = get_random_f64_zero_to_one();
             }
-            layer.biases[j] = get_random_f64_zero_to_one();
+            if (i > 0) layer.biases[j] = get_random_f64_zero_to_one();
         }
     }
 }
 
 train :: (net: *Neural_Network, epochs: u32) {
-    training_set := {{0.0, 0.0}, {0.0, 1.0}, {1.0, 0.0}, {1.0, 1.0}};
+    training_set := {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
     training_labels := {0.0, 1.0, 1.0, 0.0};
 
     for i := 0; i < epochs; ++i {
         for j := 0; j < training_set.count; ++j {
             load_inputs(net, training_set[j]);
             forward_propagate(net);
-            print("Input: % %\t Output: %\t Expected: %\n", training_set[j][0], training_set[j][1], net.layers[net.num_layers - 1].activations[0], training_labels[j]);
+            print("Input: % %\t Output: %\t Expected: %\n", training_set[j][0], training_set[j][1], net.layers[net.layers.count - 1].activations[0], training_labels[j]);
             back_propagate(net, training_labels[j]);
         }
     }
@@ -100,7 +100,7 @@ load_inputs :: (net: *Neural_Network, inputs: *f64) {
 }
 
 forward_propagate :: (net: *Neural_Network) {
-    for i := 1; i < net.num_layers; ++i {
+    for i := 1; i < net.layers.count; ++i {
         layer := *net.layers[i];
 
         for j := 0; j < layer.num_neurons; ++j {
@@ -118,15 +118,14 @@ loss_func :: (target: f64, x: f64) -> f64 {
     return (target - x) * (target - x);
 }
 
-
 back_propagate :: (net: *Neural_Network, target: f64) {
-    layer := *net.layers[net.num_layers - 1];
+    layer := *net.layers[net.layers.count - 1];
     for i := 0; i < layer.num_neurons; ++i {
-        error := target - layer.activations[i]; 
+        error := (target - layer.activations[i]); 
         layer.errors[i] = error * sigmoid_derivative(layer.activations[i]);
     }
 
-    for i: s64 = net.num_layers - 2; i > 0; --i {
+    for i: s64 = net.layers.count - 2; i > 0; --i {
         layer = *net.layers[i];
         next_layer := *net.layers[i + 1];
         for j := 0; j < layer.num_neurons; ++j {
@@ -138,7 +137,7 @@ back_propagate :: (net: *Neural_Network, target: f64) {
         }
     }
 
-    for i: s64 = net.num_layers - 2; i >= 0; --i {
+    for i: s64 = net.layers.count - 2; i >= 0; --i {
         layer = *net.layers[i];
         next_layer := *net.layers[i + 1];
         for j := 0; j < layer.num_weights_per_neuron; ++j {

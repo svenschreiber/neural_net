@@ -46,13 +46,12 @@ main :: () -> s64 {
     
     quad_vao := create_quad_vao();
 
-    while rand() < RAND_MAX {
-
-    }
-
+    start_time := get_time();
     net: Neural_Network;
     init_neural_network(*net);
-    train(*net, 10000);
+    train(*net, 20000);
+    end_time := get_time();
+    print("Time: %s\n", end_time - start_time);
 
     glClearColor(0.2, 0.2, 0.25, 1);
     glEnable(GL_BLEND);

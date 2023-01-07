@@ -19,6 +19,9 @@ Neural Network:
 - [ ] shuffle training set?
 - [ ] use ReLU activation function
 - [ ] remove num_weights_per_neuron because its repetitive?
+- [ ] change the raw malloc arrays to polymorphic arrays
+- [ ] add the ability to save/load weights
+- [ ] try network on mnist handwritten
 
 Math:
 - [ ] extend matrix math implementation
