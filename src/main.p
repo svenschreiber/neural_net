@@ -10,12 +10,13 @@
 #load "shader.p";
 #load "gl_layer.p";
 #load "draw.p";
+#load "crt_foreign.p";
+#load "neural_network.p";
 
 #if PLATFORM == Platform.Windows {
     #load "platform/win32.p";
 }
 
-sinf :: foreign (angle: f32) -> f32;
 MAX_SHADERS :: 32;
 
 State :: struct {
@@ -41,10 +42,13 @@ main :: () -> s64 {
     basic_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/basic.fs");
     circle_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/circle.fs");
     line_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/line.fs");
-
     update_projection(*state, framebuffer_size);
     
     quad_vao := create_quad_vao();
+
+    net: Neural_Network;
+    init_neural_network(*net);
+    train(*net, 10000);
 
     glClearColor(0.2, 0.2, 0.25, 1);
     glEnable(GL_BLEND);
