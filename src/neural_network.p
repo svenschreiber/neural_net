@@ -157,7 +157,7 @@ back_propagate :: (net: *Neural_Network, target: f64) {
     for i := 0; i < layer.num_neurons; ++i {
         error := target - layer.activations[i]; 
         layer.errors[i] = error * sigmoid_derivative(layer.activations[i]);
-        print("Target: %, Activation: %, Error: %\n", target, layer.activations[i], error);
+        //print("Target: %, Activation: %, Error: %\n", target, layer.activations[i], error);
         //print("Error: %\n", layer.errors[i]);
     }
 
@@ -179,7 +179,7 @@ back_propagate :: (net: *Neural_Network, target: f64) {
         for j := 0; j < layer.num_weights_per_neuron; ++j {
             next_layer.biases[j] += next_layer.errors[j] * LEARNING_RATE;
             for k := 0; k < layer.num_neurons; ++k {
-                layer.weights[k * layer.num_weights_per_neuron + j] = layer.activations[k] * next_layer.errors[j] * LEARNING_RATE;
+                layer.weights[k * layer.num_weights_per_neuron + j] += layer.activations[k] * next_layer.errors[j] * LEARNING_RATE;
             }
         }
     }
