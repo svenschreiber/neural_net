@@ -49,7 +49,7 @@ main :: () -> s64 {
     start_time := get_time();
     net: Neural_Network;
     init_neural_network(*net);
-    train(*net, 20000);
+    train(*net, 10000);
     end_time := get_time();
     print("Time: %s\n", end_time - start_time);
 
