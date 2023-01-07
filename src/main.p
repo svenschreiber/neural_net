@@ -46,6 +46,10 @@ main :: () -> s64 {
     
     quad_vao := create_quad_vao();
 
+    while rand() < RAND_MAX {
+
+    }
+
     net: Neural_Network;
     init_neural_network(*net);
     train(*net, 10000);

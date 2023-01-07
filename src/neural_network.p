@@ -23,7 +23,7 @@ Neural_Network :: struct {
 }
 
 get_random_f64_zero_to_one :: () -> f64 {
-    return cast(f64) rand() / xx RAND_MAX;
+    return cast(f64) rand() / cast(f64) RAND_MAX;
 }
 
 sigmoid :: (x: f64) -> f64 {
@@ -50,7 +50,7 @@ init_neural_network :: (net: *Neural_Network) {
     net.num_outputs = OUTPUTS;
     net.num_layers = HIDDEN_LAYERS + 2;
 
-    srand(time(null));
+    srand(0);
 
     net.layers = xx malloc(net.num_layers * size_of(Layer));
     layers: *Layer = net.layers;
@@ -77,7 +77,7 @@ init_neural_network :: (net: *Neural_Network) {
             for k := 0; k < layer.num_weights_per_neuron; ++k {
                 layer.weights[j * layer.num_weights_per_neuron + k] = get_random_f64_zero_to_one();
             }
-            layer.activations[j] = get_random_f64_zero_to_one();
+            //layer.activations[j] = get_random_f64_zero_to_one();
             layer.biases[j] = get_random_f64_zero_to_one();
         }
     }
@@ -138,9 +138,9 @@ forward_propagate :: (net: *Neural_Network) {
 
         for j := 0; j < layer.num_neurons; ++j {
             prev_layer := *net.layers[i - 1];
-            sum: f64 = layer.biases[j];
+            sum: f64 = layer.biases[j]; // bias
             for k := 0; k < prev_layer.num_neurons; ++k {
-                sum += prev_layer.activations[k] * prev_layer.weights[j * prev_layer.num_neurons + k];
+                sum += prev_layer.activations[k] * prev_layer.weights[k * prev_layer.num_weights_per_neuron + j];
             }
             layer.activations[j] = sigmoid(sum);
         }
@@ -155,18 +155,21 @@ loss_func :: (target: f64, x: f64) -> f64 {
 back_propagate :: (net: *Neural_Network, target: f64) {
     layer := *net.layers[net.num_layers - 1];
     for i := 0; i < layer.num_neurons; ++i {
-        layer.errors[i] = (target - layer.activations[i]) * sigmoid_derivative(layer.activations[i]);
+        error := target - layer.activations[i]; 
+        layer.errors[i] = error * sigmoid_derivative(layer.activations[i]);
+        print("Target: %, Activation: %, Error: %\n", target, layer.activations[i], error);
+        //print("Error: %\n", layer.errors[i]);
     }
 
-    for i: s64 = net.num_layers - 2; i >= 0; --i {
+    for i: s64 = net.num_layers - 2; i > 0; --i {
         layer = *net.layers[i];
         next_layer := *net.layers[i + 1];
         for j := 0; j < layer.num_neurons; ++j {
             error := 0.0;
             for k := 0; k < layer.num_weights_per_neuron; ++k {
-                error += next_layer.errors[k] * layer.weights[k];
+                error += next_layer.errors[k] * layer.weights[j * layer.num_weights_per_neuron + k];
             }
-            layer.errors[j] = error * sigmoid_derivative(layer.activations[i]);
+            layer.errors[j] = error * sigmoid_derivative(layer.activations[j]);
         }
     }
 
