@@ -23,7 +23,7 @@ Neural_Network :: struct {
 }
 
 get_random_f64_zero_to_one :: () -> f64 {
-    return cast(f64) rand() / cast(f64) RAND_MAX;
+    return cast(f64) rand() / xx RAND_MAX;
 }
 
 sigmoid :: (x: f64) -> f64 {
@@ -32,10 +32,6 @@ sigmoid :: (x: f64) -> f64 {
 
 sigmoid_derivative :: (x: f64) -> f64 {
     return x * (1.0 - x);
-}
-
-fast_sigmoid :: (x: f64) -> f64 {
-    return x / (1.0 + abs_f64(x));
 }
 
 abs_f64 :: (x: f64) -> f64 {
@@ -77,52 +73,23 @@ init_neural_network :: (net: *Neural_Network) {
             for k := 0; k < layer.num_weights_per_neuron; ++k {
                 layer.weights[j * layer.num_weights_per_neuron + k] = get_random_f64_zero_to_one();
             }
-            //layer.activations[j] = get_random_f64_zero_to_one();
             layer.biases[j] = get_random_f64_zero_to_one();
         }
     }
 }
 
 train :: (net: *Neural_Network, epochs: u32) {
-    training_set_size := 4;
     training_set := {{0.0, 0.0}, {0.0, 1.0}, {1.0, 0.0}, {1.0, 1.0}};
     training_labels := {0.0, 1.0, 1.0, 0.0};
 
     for i := 0; i < epochs; ++i {
-        for j := 0; j < training_set_size; ++j {
+        for j := 0; j < training_set.count; ++j {
             load_inputs(net, training_set[j]);
             forward_propagate(net);
             print("Input: % %\t Output: %\t Expected: %\n", training_set[j][0], training_set[j][1], net.layers[net.num_layers - 1].activations[0], training_labels[j]);
             back_propagate(net, training_labels[j]);
-            // print_weights(net);
-            // best_output := get_best_output(net);
         }
     }
-}
-
-print_weights :: (net: *Neural_Network) {
-    for i := 0; i < net.num_layers - 1; ++i {
-        print("Layer %:\n", i);
-        for j := 0; j < net.layers[i].num_neurons; ++j {
-            print("Neuron %:\n", j);
-            for k := 0; k < net.layers[i].num_weights_per_neuron; ++k {
-                print("Weight %: %\n", k, net.layers[i].weights[j * net.layers[i].num_weights_per_neuron + k]);
-            }
-        }
-    }
-}
-
-get_best_output :: (net: *Neural_Network) -> u32 {
-    last_layer := *net.layers[net.num_layers - 1];
-    max_idx := 0;
-    max_value := last_layer.activations[0];
-    for i := 1; i < last_layer.num_neurons; ++i {
-        if last_layer.activations[i] > max_value {
-            max_idx = i;
-            max_value = last_layer.activations[i];
-        }
-    }
-    return max_idx;
 }
 
 load_inputs :: (net: *Neural_Network, inputs: *f64) {
@@ -138,7 +105,7 @@ forward_propagate :: (net: *Neural_Network) {
 
         for j := 0; j < layer.num_neurons; ++j {
             prev_layer := *net.layers[i - 1];
-            sum: f64 = layer.biases[j]; // bias
+            sum: f64 = layer.biases[j]; 
             for k := 0; k < prev_layer.num_neurons; ++k {
                 sum += prev_layer.activations[k] * prev_layer.weights[k * prev_layer.num_weights_per_neuron + j];
             }
@@ -157,8 +124,6 @@ back_propagate :: (net: *Neural_Network, target: f64) {
     for i := 0; i < layer.num_neurons; ++i {
         error := target - layer.activations[i]; 
         layer.errors[i] = error * sigmoid_derivative(layer.activations[i]);
-        //print("Target: %, Activation: %, Error: %\n", target, layer.activations[i], error);
-        //print("Error: %\n", layer.errors[i]);
     }
 
     for i: s64 = net.num_layers - 2; i > 0; --i {

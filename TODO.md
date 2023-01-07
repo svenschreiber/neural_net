@@ -12,12 +12,13 @@ Rendering:
 Neural Network:
 - [x] basic neuron setup
 - [x] forward propagation
-- [ ] back-propagation
-- [ ] input data loading
+- [x] back-propagation
+- [x] input data loading
 - [ ] visualization of the network
-- [ ] neuron bias
-- [ ] shuffle training set
+- [x] neuron bias
+- [ ] shuffle training set?
 - [ ] use ReLU activation function
+- [ ] remove num_weights_per_neuron because its repetitive?
 
 Math:
 - [ ] extend matrix math implementation
