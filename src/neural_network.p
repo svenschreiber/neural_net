@@ -1,7 +1,7 @@
 INPUTS :: 2;
 OUTPUTS :: 1;
 HIDDEN_LAYERS :: 2;
-NEURONS_PER_HIDDEN_LAYER :: 4;
+NEURONS_PER_HIDDEN_LAYER :: 3;
 LEARNING_RATE :: 0.15;
 
 Layer :: struct {
@@ -72,12 +72,12 @@ init_neural_network :: (net: *Neural_Network) {
     }
 }
 
-train :: (net: *Neural_Network, epochs: u32) {
+train :: (net: *Neural_Network, epochs: u64) {
     training_set := {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
     training_labels := {0.0, 1.0, 1.0, 0.0};
 
     start_time := get_time();
-    for i := 0; i < epochs; ++i {
+    for i: u64 = 0; i < epochs; ++i {
         for j := 0; j < training_set.count; ++j {
             load_into_input_layer(net, training_set[j]);
             forward_propagate(net);

@@ -27,7 +27,7 @@ State :: struct {
 
 Train_Params :: struct {
     net: *Neural_Network;
-    epochs: s32;
+    epochs: u64;
 }
 
 thread_train :: (params: *void) {
@@ -61,7 +61,7 @@ main :: () -> s64 {
     init_neural_network(*net);
     params: Train_Params;
     params.net = *net;
-    params.epochs = 100000;
+    params.epochs = 50000;
     thread := start_thread(thread_train, xx *params);
 
     glClearColor(0.2, 0.2, 0.25, 1);
@@ -79,14 +79,41 @@ main :: () -> s64 {
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        draw_quad(*quad_vao, basic_shader, v2f(0, 0), framebuffer_size.y, v4f(1, .8, .8, 1));
-        draw_circle(*quad_vao, circle_shader, v2f(100, 100), framebuffer_size.y / 4, v4f(1, 1, 1, 1));
-        draw_line(*quad_vao, line_shader, v2f(900, 200), v2f(450, 300), v4f(0, 0, 0, 1), 5);
+        y_margin := 100;
+        x_margin := 150;
+        y_center := 200;
+        neuron_x := 200;
+        radius := 25;
+        next_layer: *Layer;
+        for i := 0; i < net.layers.count; ++i {
+            layer := *net.layers[i];
+            if i < net.layers.count - 1 {
+                next_layer = *net.layers[i + 1];
+            } else {
+                next_layer = null;
+            }
+            neuron_x += x_margin;
+            neuron_y := y_center - y_margin * layer.num_neurons / 2;
+            for j := 0; j < layer.num_neurons; ++j {
+                neuron_y += y_margin;
+                if next_layer != null {
+                    next_neuron_x := neuron_x + x_margin;
+                    next_neuron_y := y_center - y_margin * next_layer.num_neurons / 2;
+                    for k := 0; k < next_layer.num_neurons; ++k {
+                        next_neuron_y += y_margin;
+                        c := cast(f32)sigmoid(next_layer.weights[k * layer.num_neurons + j]);
+                        draw_line(*quad_vao, line_shader, v2f(xx neuron_x, xx neuron_y), v2f(xx next_neuron_x, xx next_neuron_y), v4f(c, c, c, 1), 1);
+                    }
+                }
+                draw_circle(*quad_vao, circle_shader, v2f(xx neuron_x, xx neuron_y), 25, v4f(1, 1, 1, 1));
+            }
+
+        }
 
         swap_gl_buffers(*window);
     }
 
-    join_thread(thread);
+    kill_thread(thread);
     destroy_gl_context(*window);
     return 0;
 }

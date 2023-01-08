@@ -9,9 +9,9 @@ draw_quad :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: f32, color: v
 }
 
 draw_circle :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, radius: f32, color: v4f) {
-    center := v2f(pos.x + radius, pos.y + radius);
+    center := v2f(pos.x, pos.y);
     transformation_matrix := m4f_identity();
-    m4f_transform(*transformation_matrix, v3f(pos.x, pos.y, 0), 2 * radius);
+    m4f_transform(*transformation_matrix, v3f(pos.x - radius, pos.y - radius, 0), 2 * radius);
     use_shader(shader);
     shader_set_mat4(shader, "transformation", transformation_matrix);
     shader_set_vec4(shader, "color", color);

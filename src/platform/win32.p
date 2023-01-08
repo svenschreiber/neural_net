@@ -42,6 +42,15 @@ join_thread :: (thread: Thread) {
     free(xx win32_thread);
 }
 
+kill_thread :: (thread: Thread) {
+    win32_thread := win32_thread_from_thread(thread);
+    if win32_thread.handle != 0 {
+        TerminateThread(win32_thread.handle, 0);
+        CloseHandle(win32_thread.handle);
+    }
+    free(xx win32_thread);
+}
+
 // window
 get_framebuffer_size :: (window: *Window) -> v2f {
     result: v2f;
