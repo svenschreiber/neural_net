@@ -76,14 +76,17 @@ train :: (net: *Neural_Network, epochs: u32) {
     training_set := {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
     training_labels := {0.0, 1.0, 1.0, 0.0};
 
+    start_time := get_time();
     for i := 0; i < epochs; ++i {
         for j := 0; j < training_set.count; ++j {
             load_into_input_layer(net, training_set[j]);
             forward_propagate(net);
-            //print("Input: % %\t Output: %\t Expected: %\n", training_set[j][0], training_set[j][1], net.layers[net.layers.count - 1].activations[0], training_labels[j]);
+            print("Input: % %\t Output: %\t Expected: %\n", training_set[j][0], training_set[j][1], net.layers[net.layers.count - 1].activations[0], training_labels[j]);
             back_propagate(net, training_labels[j]);
         }
     }
+    end_time := get_time();
+    print("Time: %\n", end_time - start_time);
 }
 
 load_into_input_layer :: (net: *Neural_Network, inputs: *f64) {

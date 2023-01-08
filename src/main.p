@@ -13,6 +13,7 @@
 #load "crt_foreign.p";
 #load "neural_network.p";
 
+#load "platform/platform.p";
 #if PLATFORM == Platform.Windows {
     #load "platform/win32.p";
 }
@@ -22,6 +23,16 @@ MAX_SHADERS :: 32;
 State :: struct {
     shaders: [MAX_SHADERS]GLuint;
     num_shaders: u32;
+}
+
+Train_Params :: struct {
+    net: *Neural_Network;
+    epochs: s32;
+}
+
+thread_train :: (params: *void) {
+    train_params: *Train_Params = xx params;
+    train(train_params.net, train_params.epochs);
 }
 
 main :: () -> s64 {
@@ -46,12 +57,12 @@ main :: () -> s64 {
     
     quad_vao := create_quad_vao();
 
-    start_time := get_time();
     net: Neural_Network;
     init_neural_network(*net);
-    train(*net, 10000);
-    end_time := get_time();
-    print("Time: %s\n", end_time - start_time);
+    params: Train_Params;
+    params.net = *net;
+    params.epochs = 100000;
+    thread := start_thread(thread_train, xx *params);
 
     glClearColor(0.2, 0.2, 0.25, 1);
     glEnable(GL_BLEND);
@@ -75,6 +86,7 @@ main :: () -> s64 {
         swap_gl_buffers(*window);
     }
 
+    join_thread(thread);
     destroy_gl_context(*window);
     return 0;
 }
