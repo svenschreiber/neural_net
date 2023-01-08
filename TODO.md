@@ -8,13 +8,16 @@ Rendering:
 - [x] drawing quads
 - [x] drawing simple circles
 - [x] drawing lines
+- [ ] support the option for outlines
 
 Neural Network:
 - [x] basic neuron setup
 - [x] forward propagation
 - [x] back-propagation
 - [x] input data loading
-- [ ] visualization of the network
+- [x] visualization of the network
+- [ ] draw neuron activations
+- [ ] make the camera controllable
 - [x] neuron bias
 - [ ] shuffle training set?
 - [ ] use ReLU activation function

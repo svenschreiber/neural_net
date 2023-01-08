@@ -84,6 +84,9 @@ main :: () -> s64 {
         y_center := 200;
         neuron_x := 200;
         radius := 25;
+        red := v3f(1, 0, 0);
+        green := v3f(0, 1, 0);
+        diff := v3f_sub_v3f(green, red);
         next_layer: *Layer;
         for i := 0; i < net.layers.count; ++i {
             layer := *net.layers[i];
@@ -102,10 +105,12 @@ main :: () -> s64 {
                     for k := 0; k < next_layer.num_neurons; ++k {
                         next_neuron_y += y_margin;
                         c := cast(f32)sigmoid(next_layer.weights[k * layer.num_neurons + j]);
-                        draw_line(*quad_vao, line_shader, v2f(xx neuron_x, xx neuron_y), v2f(xx next_neuron_x, xx next_neuron_y), v4f(c, c, c, 1), 1);
+                        color := v3f_add_v3f(red, v3f_mul_f(diff, c));
+                        draw_line(*quad_vao, line_shader, v2f(xx neuron_x, xx neuron_y), v2f(xx next_neuron_x, xx next_neuron_y), v4f(color.x, color.y, color.z, 1), 1);
                     }
                 }
-                draw_circle(*quad_vao, circle_shader, v2f(xx neuron_x, xx neuron_y), 25, v4f(1, 1, 1, 1));
+                draw_circle(*quad_vao, circle_shader, v2f(xx neuron_x, xx neuron_y), xx radius * 1.15, v4f(0, 0, 0, 1));
+                draw_circle(*quad_vao, circle_shader, v2f(xx neuron_x, xx neuron_y), xx radius, v4f(1, 1, 1, 1));
             }
 
         }
