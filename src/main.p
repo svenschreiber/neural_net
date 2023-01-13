@@ -12,6 +12,7 @@
 #load "draw.p";
 #load "crt_foreign.p";
 #load "neural_network.p";
+#load "mnist.p";
 
 #load "platform/platform.p";
 #if PLATFORM == Platform.Windows {

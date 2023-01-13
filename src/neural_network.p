@@ -23,11 +23,24 @@ get_random_f64_zero_to_one :: () -> f64 {
     return cast(f64) rand() / xx RAND_MAX;
 }
 
+
+/* Activation functions */
+relu :: (x: f64) -> f64 {
+    if x < 0.0 {
+        return 0;
+    }
+    return x;
+}
+
+relu_prime :: (x: f64) -> f64 {
+    return xx (x > 0.0);
+}
+
 sigmoid :: (x: f64) -> f64 {
     return 1.0 / (1.0 + exp(-x));
 }
 
-sigmoid_derivative :: (x: f64) -> f64 {
+sigmoid_prime :: (x: f64) -> f64 {
     return x * (1.0 - x);
 }
 
@@ -97,19 +110,30 @@ load_into_input_layer :: (net: *Neural_Network, inputs: *f64) {
 }
 
 forward_propagate :: (net: *Neural_Network) {
-    for i := 1; i < net.layers.count; ++i {
+    // hidden
+    for i := 1; i < net.layers.count - 1; ++i {
         layer := *net.layers[i];
-
+        prev_layer := *net.layers[i - 1];
         // For each neuron sum all the activations from the previous layer multiplied with their respective weights
         // and propagate these activation values forward through the whole network.
         for j := 0; j < layer.num_neurons; ++j {
-            prev_layer := *net.layers[i - 1];
             sum: f64 = layer.biases[j]; 
             for k := 0; k < prev_layer.num_neurons; ++k {
                 sum += prev_layer.activations[k] * layer.weights[j * prev_layer.num_neurons + k];
             }
-            layer.activations[j] = sigmoid(sum);
+            layer.activations[j] = relu(sum);
         }
+    }
+
+    // output
+    layer := *net.layers[net.layers.count - 1];
+    prev_layer := *net.layers[net.layers.count - 2];
+    for j := 0; j < layer.num_neurons; ++j {
+        sum: f64 = layer.biases[j]; 
+        for k := 0; k < prev_layer.num_neurons; ++k {
+            sum += prev_layer.activations[k] * layer.weights[j * prev_layer.num_neurons + k];
+        }
+        layer.activations[j] = sigmoid(sum);
     }
 }
 
@@ -122,7 +146,7 @@ back_propagate :: (net: *Neural_Network, target: f64) {
     layer := *net.layers[net.layers.count - 1];
     for i := 0; i < layer.num_neurons; ++i {
         error := (target - layer.activations[i]); 
-        layer.errors[i] = error * sigmoid_derivative(layer.activations[i]);
+        layer.errors[i] = error * sigmoid_prime(layer.activations[i]);
     }
 
     // Propagate the error back through all of the hidden layers
@@ -134,7 +158,7 @@ back_propagate :: (net: *Neural_Network, target: f64) {
             for k := 0; k < next_layer.num_neurons; ++k {
                 error += next_layer.errors[k] * next_layer.weights[k * layer.num_neurons + j];
             }
-            layer.errors[j] = error * sigmoid_derivative(layer.activations[j]);
+            layer.errors[j] = error * relu_prime(layer.activations[j]);
         }
     }
 
