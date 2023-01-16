@@ -1,5 +1,5 @@
 load_shader_from_file :: (path: string, type: GLenum) -> GLuint {
-    shader_source := read_file(path);
+    shader_source, _ := read_file(path);
     shader := glCreateShader(xx type);
     shader_source_cstr := to_cstring(shader_source);
     defer free_cstring(shader_source_cstr);

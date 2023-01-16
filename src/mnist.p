@@ -13,10 +13,10 @@ MNIST_IMG_INFO_LEN   :: 16;
 MNIST_LABEL_INFO_LEN :: 8;
 
 load_mnist :: () -> MNIST_Dataset {
-    train_images := read_file("res/datasets/mnist/train-images.idx3-ubyte");
-    train_labels := read_file("res/datasets/mnist/train-labels.idx1-ubyte");
-    test_images  := read_file("res/datasets/mnist/t10k-images.idx3-ubyte");
-    test_labels  := read_file("res/datasets/mnist/t10k-labels.idx1-ubyte");
+    train_images, _a := read_file("res/datasets/mnist/train-images.idx3-ubyte");
+    train_labels, _b := read_file("res/datasets/mnist/train-labels.idx1-ubyte");
+    test_images, _c  := read_file("res/datasets/mnist/t10k-images.idx3-ubyte");
+    test_labels, _d  := read_file("res/datasets/mnist/t10k-labels.idx1-ubyte");
 
     result: MNIST_Dataset;
 
