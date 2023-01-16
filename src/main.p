@@ -13,6 +13,7 @@
 #load "crt_foreign.p";
 #load "neural_network.p";
 #load "mnist.p";
+#load "files.p";
 
 #load "platform/platform.p";
 #if PLATFORM == Platform.Windows {
@@ -33,7 +34,11 @@ Train_Params :: struct {
 
 thread_train :: (params: *void) {
     train_params: *Train_Params = xx params;
+
+    start_time := get_time();
     train(train_params.net, train_params.epochs);
+    end_time := get_time();
+    print("Time: %\n", end_time - start_time);
 }
 
 main :: () -> s64 {
@@ -62,7 +67,7 @@ main :: () -> s64 {
     init_neural_network(*net);
     params: Train_Params;
     params.net = *net;
-    params.epochs = 50000;
+    params.epochs = 40;
     thread := start_thread(thread_train, xx *params);
 
     glClearColor(0.2, 0.2, 0.25, 1);
@@ -80,8 +85,9 @@ main :: () -> s64 {
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        y_margin := 100;
-        x_margin := 150;
+        /*
+        y_margin := 400;
+        x_margin := 600;
         y_center := 200;
         neuron_x := 200;
         radius := 25;
@@ -115,6 +121,7 @@ main :: () -> s64 {
             }
 
         }
+        */
 
         swap_gl_buffers(*window);
     }

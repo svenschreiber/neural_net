@@ -27,5 +27,11 @@ Neural Network:
 - [ ] try network on mnist handwritten
 - [ ] support multi class and binary classification at the same time (with organized code)
 
+MNIST Loader:
+- [x] load training set
+- [x] load labels as one-hot encoded
+- [ ] load test set
+- [ ] cleanup code
+
 Math:
 - [ ] extend matrix math implementation
