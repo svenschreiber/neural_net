@@ -1,8 +1,8 @@
 INPUTS :: 784;
 OUTPUTS :: 10;
-HIDDEN_LAYERS :: 2;
-NEURONS_PER_HIDDEN_LAYER :: 16;
-LEARNING_RATE :: 0.1;
+HIDDEN_LAYERS :: 1;
+NEURONS_PER_HIDDEN_LAYER :: 64;
+LEARNING_RATE :: 0.01;
 
 Layer :: struct {
     activations: *f64;
@@ -132,23 +132,28 @@ init_neural_network :: (net: *Neural_Network) {
 
 train :: (net: *Neural_Network, epochs: u64) {
     dataset := load_mnist();
+    x_train := *dataset.x_train[0];
+    y_train := *dataset.y_train[0];
+    dataset_size := 10000;
+    //x_train := {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
+    //y_train := {0.0, 1.0, 1.0, 0.0};
+    //dataset_size := 4;
 
     loss := 0.0;
-    batch_size := 5000;
+    batch_size := dataset_size / 10;
     for i: u64 = 0; i < epochs; ++i {
-        for j := 0; j < dataset.y_train.count; ++j {
-            label := dataset.y_train[j];
-            load_into_input_layer(net, *dataset.x_train[j * MNIST_IMG_BYTES]);
+        for j := 0; j < dataset_size; ++j {
+            label := y_train[j];
+            load_into_input_layer(net, *x_train[j]);
             loss += forward_propagate(net, label);
             if j % batch_size == 0 {
-                printf("Loss: %lf\n", loss / xx batch_size);
                 last_layer := *net.layers[net.layers.count - 1];
-                print("Ground-Truth: % \t Accuracy-Prediction: %\n", label, last_layer.activations[cast(s32)label]);
+                print("Ground-Truth: % \t Prediction-Accuracy: %\n", label, last_layer.activations[cast(s32)label]);
+                //print("Loss: % \t Ground-Truth: % \t Accuracy-Prediction: %\n", loss / cast(f64) batch_size, label, last_layer.activations[cast(s32)label]);
                 loss = 0.0;
             }
 
-            //print("Input: % %\t Output: %\t Expected: %\n", training_set[j][0], training_set[j][1], net.layers[net.layers.count - 1].activations[0], training_labels[j]);
-            back_propagate(net, dataset.y_train[j]);
+            back_propagate(net, label);
         }
     }
 }
@@ -172,7 +177,7 @@ forward_propagate :: (net: *Neural_Network, label: f64) -> f64 {
             for k := 0; k < prev_layer.num_neurons; ++k {
                 sum += prev_layer.activations[k] * layer.weights[j * prev_layer.num_neurons + k];
             }
-            layer.activations[j] = sigmoid(sum);
+            layer.activations[j] = relu(sum);
         }
     }
 
@@ -206,7 +211,7 @@ back_propagate :: (net: *Neural_Network, label: f64) {
             for k := 0; k < next_layer.num_neurons; ++k {
                 error += next_layer.errors[k] * next_layer.weights[k * layer.num_neurons + j];
             }
-            layer.errors[j] = error * sigmoid_prime(layer.activations[j]);
+            layer.errors[j] = error * relu_prime(layer.activations[j]);
         }
     }
 
