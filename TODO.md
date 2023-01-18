@@ -26,8 +26,7 @@ Neural Network:
 - [ ] add the ability to save/load weights
 - [x] try network on mnist handwritten
 - [ ] support multi class and binary classification at the same time (with organized code)
-- [ ] use mini batch
-- [ ] use momentum
+- [x] use momentum
 
 MNIST Loader:
 - [x] load test/training set

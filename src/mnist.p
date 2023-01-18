@@ -1,8 +1,8 @@
 MNIST_Dataset :: struct {
-    x_train: []f64;
-    y_train: []f64;
-    x_test: []f64;
-    y_test: []f64;
+    x_train: []f32;
+    y_train: []f32;
+    x_test: []f32;
+    y_test: []f32;
 }
 
 MNIST_TRAIN_SIZE :: 60000;
@@ -20,20 +20,20 @@ load_mnist :: () -> MNIST_Dataset {
 
     result: MNIST_Dataset;
 
-    result.x_train = allocate_array(MNIST_IMG_BYTES * MNIST_TRAIN_SIZE, f64);
-    result.y_train = allocate_array(MNIST_TRAIN_SIZE, f64);
+    result.x_train = allocate_array(MNIST_IMG_BYTES * MNIST_TRAIN_SIZE, f32);
+    result.y_train = allocate_array(MNIST_TRAIN_SIZE, f32);
     for i := 0; i < MNIST_TRAIN_SIZE; ++i {
         for j := 0; j < MNIST_IMG_BYTES; ++j {
-            result.x_train[i * MNIST_IMG_SIZE + j] = cast(f64)(cast(u8)train_images.data[i * MNIST_IMG_SIZE + j + MNIST_IMG_INFO_LEN]) / 255.0;
+            result.x_train[i * MNIST_IMG_SIZE + j] = cast(f32)(cast(u8)train_images.data[i * MNIST_IMG_SIZE + j + MNIST_IMG_INFO_LEN]) / 255.0;
         }
         result.y_train[i] = xx train_labels.data[i + MNIST_LABEL_INFO_LEN];
     }
 
-    result.x_test  = allocate_array(MNIST_IMG_BYTES * MNIST_TEST_SIZE, f64);
-    result.y_test  = allocate_array(MNIST_TEST_SIZE, f64);
+    result.x_test  = allocate_array(MNIST_IMG_BYTES * MNIST_TEST_SIZE, f32);
+    result.y_test  = allocate_array(MNIST_TEST_SIZE, f32);
     for i := 0; i < MNIST_TEST_SIZE; ++i {
         for j := 0; j < MNIST_IMG_BYTES; ++j {
-            result.x_test[i * MNIST_IMG_SIZE + j] = cast(f64)(cast(u8)test_images.data[i * MNIST_IMG_SIZE + j + MNIST_IMG_INFO_LEN]) / 255.0;
+            result.x_test[i * MNIST_IMG_SIZE + j] = cast(f32)(cast(u8)test_images.data[i * MNIST_IMG_SIZE + j + MNIST_IMG_INFO_LEN]) / 255.0;
         }
         result.y_test[i] = xx test_labels.data[i + MNIST_LABEL_INFO_LEN];
     }
