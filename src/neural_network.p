@@ -3,10 +3,12 @@ OUTPUTS :: 10;
 HIDDEN_LAYERS :: 1;
 NEURONS_PER_HIDDEN_LAYER :: 64;
 LEARNING_RATE :: 0.01;
+MOMENTUM :: 0.9;
 
 Layer :: struct {
     activations: *f64;
     weights: *f64;
+    delta_weights: *f64;
     errors: *f64;
     biases: *f64;
     num_neurons: u32;
@@ -26,33 +28,21 @@ get_random_f64_zero_to_one :: () -> f64 {
 
 /* Activation functions */
 relu :: (x: f64) -> f64 {
-    if 0.01 * x > x {
-        return 0.01 * x;
+    if x < 0.0 {
+        return 0.0;
     }
     return x;
 }
 
-layer_relu :: (layer: *Layer) {
-    for i := 0; i < layer.num_neurons; ++i {
-        layer.activations[i] = relu(layer.activations[i]);
-    }
-}
-
 relu_prime :: (x: f64) -> f64 {
-    if x <= 0 {
-        return 0.01;
+    if x <= 0.0 {
+        return 0.0;
     }
     return 1.0;
 }
 
 sigmoid :: (x: f64) -> f64 {
     return 1.0 / (1.0 + exp(-x));
-}
-
-layer_sigmoid :: (layer: *Layer) {
-    for i := 0; i < layer.num_neurons; ++i {
-        layer.activations[i] = sigmoid(layer.activations[i]);
-    }
 }
 
 sigmoid_prime :: (x: f64) -> f64 {
@@ -84,7 +74,6 @@ softmax :: (layer: *Layer, prev_layer: *Layer, label: f64) -> f64 {
 
     // calc loss
     loss := -log(layer.activations[cast(s32) label]) / xx layer.num_neurons;
-    //loss := -layer.activations[cast(s32) label] + log(exp_sum);
 
     return loss;
 }
@@ -118,12 +107,14 @@ init_neural_network :: (net: *Neural_Network) {
         
         layer.activations = xx malloc(layer.num_neurons * size_of(f64));
         layer.weights     = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f64));
+        layer.delta_weights = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f64));
         layer.errors      = xx malloc(layer.num_neurons * size_of(f64)); 
         layer.biases      = xx malloc(layer.num_neurons * size_of(f64)); 
 
         for j := 0; j < layer.num_neurons; ++j {
             for k := 0; k < prev_layer.num_neurons; ++k {
                 layer.weights[j * prev_layer.num_neurons + k] = get_random_f64_zero_to_one();
+                layer.delta_weights[j * prev_layer.num_neurons + k] = 0.0;
             }
             layer.biases[j] = get_random_f64_zero_to_one();
         }
@@ -134,10 +125,7 @@ train :: (net: *Neural_Network, epochs: u64) {
     dataset := load_mnist();
     x_train := *dataset.x_train[0];
     y_train := *dataset.y_train[0];
-    dataset_size := 10000;
-    //x_train := {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
-    //y_train := {0.0, 1.0, 1.0, 0.0};
-    //dataset_size := 4;
+    dataset_size := 30000;
 
     loss := 0.0;
     batch_size := dataset_size / 10;
@@ -148,8 +136,7 @@ train :: (net: *Neural_Network, epochs: u64) {
             loss += forward_propagate(net, label);
             if j % batch_size == 0 {
                 last_layer := *net.layers[net.layers.count - 1];
-                print("Ground-Truth: % \t Prediction-Accuracy: %\n", label, last_layer.activations[cast(s32)label]);
-                //print("Loss: % \t Ground-Truth: % \t Accuracy-Prediction: %\n", loss / cast(f64) batch_size, label, last_layer.activations[cast(s32)label]);
+                print("Loss: % \t Ground-Truth: % \t Prediction-Accuracy: %\n", loss / xx batch_size, label, last_layer.activations[cast(s32)label]);
                 loss = 0.0;
             }
 
@@ -216,13 +203,16 @@ back_propagate :: (net: *Neural_Network, label: f64) {
     }
 
     // Update weights according to their error and learning rate
+    weight_idx: u64;
     for i: s64 = net.layers.count - 1; i > 0; --i {
         layer = *net.layers[i];
         prev_layer := *net.layers[i - 1];
         for j := 0; j < layer.num_neurons; ++j {
             layer.biases[j] -= layer.errors[j] * LEARNING_RATE;
             for k := 0; k < prev_layer.num_neurons; ++k {
-                layer.weights[j * prev_layer.num_neurons + k] -= prev_layer.activations[k] * layer.errors[j] * LEARNING_RATE;
+                weight_idx = j * prev_layer.num_neurons + k;
+                layer.delta_weights[weight_idx] = MOMENTUM * layer.delta_weights[weight_idx] + (1.0 - MOMENTUM) * prev_layer.activations[k] * layer.errors[j];
+                layer.weights[weight_idx] -=  layer.delta_weights[weight_idx] * LEARNING_RATE;
             }
         }
     }

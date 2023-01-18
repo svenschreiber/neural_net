@@ -38,7 +38,7 @@ draw_line :: (vao: *Vertex_Array, shader: GLuint, p1: v2f, p2: v2f, color: v4f, 
     margin := line_width + 1;
     top_left := v3f(p1.x - margin, minf(p1.y, p2.y) - margin, 0);
     rect_width := p2.x - p1.x + margin * 2;
-    rect_height := fabs(p2.y - p1.y) + margin * 2;
+    rect_height := abs(p2.y - p1.y) + margin * 2;
 
     transformation_matrix := m4f_identity();
     m4f_translate(*transformation_matrix, top_left);
