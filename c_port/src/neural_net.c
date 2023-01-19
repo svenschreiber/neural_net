@@ -8,8 +8,8 @@
 
 #define INPUTS 784
 #define OUTPUTS 10
-#define HIDDEN_LAYERS 1
-#define NEURONS_PER_HIDDEN_LAYER 64
+#define HIDDEN_LAYERS 2
+#define NEURONS_PER_HIDDEN_LAYER 16
 #define LEARNING_RATE 0.01f
 #define MOMENTUM 0.9f
 
@@ -197,7 +197,7 @@ void train(Neural_Network *net, u64 epochs) {
     MNIST_Dataset dataset = load_mnist();
     f32 *x_train = dataset.x_train;
     f32 *y_train = dataset.y_train;
-    u32 dataset_size = 10000;
+    u32 dataset_size = 60000;
 
     f32 loss = 0.0f;
     u32 batch_size = dataset_size / 10;
@@ -221,7 +221,7 @@ void train(Neural_Network *net, u64 epochs) {
 int main() {
     Neural_Network net;
     init_neural_network(&net);
-    train(&net, 1000);
+    train(&net, 10);
 
     return 0;
 }

@@ -28,16 +28,12 @@ get_random_f32_zero_to_one :: () -> f32 {
 
 /* Activation functions */
 relu :: (x: f32) -> f32 {
-    if x < 0.0 {
-        return 0.0;
-    }
+    if (x < 0.0) return 0.0; 
     return x;
 }
 
 relu_prime :: (x: f32) -> f32 {
-    if x <= 0.0 {
-        return 0.0;
-    }
+    if (x <= 0.0) return 0.0;
     return 1.0;
 }
 
@@ -49,7 +45,7 @@ sigmoid_prime :: (x: f32) -> f32 {
     return x * (1.0 - x);
 }
 
-softmax :: (layer: *Layer, prev_layer: *Layer, label: f32) -> f32 {
+softmax :: (layer: *Layer, prev_layer: *Layer) {
     // get max for stability
     max := layer.activations[0];
     for i := 1; i < layer.num_neurons; ++i {
@@ -61,21 +57,18 @@ softmax :: (layer: *Layer, prev_layer: *Layer, label: f32) -> f32 {
     // calc exp sum
     exp_sum: f32 = 0.0;
     for i := 0; i < layer.num_neurons; ++i {
-        layer.activations[i] -= max;
-        exp_activation := expf(layer.activations[i]);
-        exp_sum += exp_activation;
-        layer.activations[i] = exp_activation;
+        layer.activations[i] = expf(layer.activations[i] - max);
+        exp_sum += layer.activations[i];
     }
 
     // calc softmax for each neuron
     for i := 0; i < layer.num_neurons; ++i {
-        layer.activations[i] = layer.activations[i] / exp_sum;
+        layer.activations[i] /= exp_sum;
     }
+}
 
-    // calc loss
-    loss := -logf(layer.activations[cast(s32) label]) / xx layer.num_neurons;
-
-    return loss;
+cross_entropy_loss :: (layer: *Layer, label: u32) -> f32 {
+    return -logf(layer.activations[label]);
 }
 
 init_neural_network :: (net: *Neural_Network) {
@@ -100,11 +93,11 @@ init_neural_network :: (net: *Neural_Network) {
         if (i != layers.count - 1) layer.num_neurons = net.num_neurons_per_hidden_layer;
         else                       layer.num_neurons = net.num_outputs;
         
-        layer.activations = xx malloc(layer.num_neurons * size_of(f32));
-        layer.weights     = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f32));
+        layer.activations   = xx malloc(layer.num_neurons * size_of(f32));
+        layer.weights       = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f32));
         layer.delta_weights = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f32));
-        layer.errors      = xx malloc(layer.num_neurons * size_of(f32)); 
-        layer.biases      = xx malloc(layer.num_neurons * size_of(f32)); 
+        layer.errors        = xx malloc(layer.num_neurons * size_of(f32)); 
+        layer.biases        = xx malloc(layer.num_neurons * size_of(f32)); 
 
         for j := 0; j < layer.num_neurons; ++j {
             for k := 0; k < prev_layer.num_neurons; ++k {
@@ -129,7 +122,8 @@ train :: (net: *Neural_Network, epochs: u64) {
         for j := 0; j < dataset_size; ++j {
             label := y_train[j];
             load_into_input_layer(net, *x_train[j * MNIST_IMG_BYTES]);
-            loss += forward_propagate(net, label);
+            forward_propagate(net);
+            loss += cross_entropy_loss(*net.layers[net.layers.count - 1], xx label);
             if j % batch_size == 0 {
                 last_layer := *net.layers[net.layers.count - 1];
                 print("loss: % \t ground-truth: % \t certainty: %\n", loss / xx batch_size, label, last_layer.activations[cast(s32)label]);
@@ -148,7 +142,8 @@ train :: (net: *Neural_Network, epochs: u64) {
     for i := 0; i < test_set_size; ++i {
         label := y_test[i];
         load_into_input_layer(net, *x_test[i * MNIST_IMG_BYTES]);
-        test_loss += forward_propagate(net, label);
+        forward_propagate(net);
+        test_loss += cross_entropy_loss(*net.layers[net.layers.count - 1], xx label);
         prediction := layer_argmax(*net.layers[net.layers.count - 1]);
         if prediction == xx label ++num_correct;
     }
@@ -174,13 +169,11 @@ layer_argmax :: (layer: *Layer) -> u64 {
     return max_idx;
 }
 
-forward_propagate :: (net: *Neural_Network, label: f32) -> f32 {
+forward_propagate :: (net: *Neural_Network) {
     // hidden
     for i := 1; i < net.layers.count - 1; ++i {
         layer := *net.layers[i];
         prev_layer := *net.layers[i - 1];
-        // For each neuron sum all the activations from the previous layer multiplied with their respective weights
-        // and propagate these activation values forward through the whole network.
         for j := 0; j < layer.num_neurons; ++j {
             sum: f32 = layer.biases[j]; 
             for k := 0; k < prev_layer.num_neurons; ++k {
@@ -200,7 +193,7 @@ forward_propagate :: (net: *Neural_Network, label: f32) -> f32 {
         }
         layer.activations[i] = sum;
     }
-    return softmax(layer, prev_layer, label);
+    softmax(layer, prev_layer);
 }
 
 back_propagate :: (net: *Neural_Network, label: f32) {
