@@ -12,6 +12,7 @@ Rendering/Visualization:
 - [x] visualization of the network
 - [ ] draw neuron activations (as text)
 - [ ] make the camera controllable
+- [ ] make 28x28 paintable grid to draw some numbers
 
 Neural Network:
 - [x] basic neuron setup
@@ -30,6 +31,7 @@ Neural Network:
 
 MNIST Loader:
 - [x] load test/training set
+- [ ] make api better
 - [ ] cleanup code
 
 Math:
