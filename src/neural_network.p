@@ -1,7 +1,7 @@
 INPUTS :: 784;
 OUTPUTS :: 10;
-HIDDEN_LAYERS :: 1;
-NEURONS_PER_HIDDEN_LAYER :: 64;
+HIDDEN_LAYERS :: 2;
+NEURONS_PER_HIDDEN_LAYER :: 16;
 LEARNING_RATE :: 0.01;
 MOMENTUM :: 0.9;
 
@@ -128,11 +128,11 @@ train :: (net: *Neural_Network, epochs: u64) {
         print("Epoch: %\n", i);
         for j := 0; j < dataset_size; ++j {
             label := y_train[j];
-            load_into_input_layer(net, *x_train[j]);
+            load_into_input_layer(net, *x_train[j * MNIST_IMG_BYTES]);
             loss += forward_propagate(net, label);
             if j % batch_size == 0 {
                 last_layer := *net.layers[net.layers.count - 1];
-                print("Loss: % \t Ground-Truth: % \t Prediction-Accuracy: %\n", loss / xx batch_size, label, last_layer.activations[cast(s32)label]);
+                print("loss: % \t ground-truth: % \t certainty: %\n", loss / xx batch_size, label, last_layer.activations[cast(s32)label]);
                 loss = 0.0;
             }
 
@@ -146,13 +146,13 @@ train :: (net: *Neural_Network, epochs: u64) {
     test_loss: f32 = 0;
     num_correct := 0;
     for i := 0; i < test_set_size; ++i {
-        label := y_train[i];
-        load_into_input_layer(net, *x_test[i]);
+        label := y_test[i];
+        load_into_input_layer(net, *x_test[i * MNIST_IMG_BYTES]);
         test_loss += forward_propagate(net, label);
         prediction := layer_argmax(*net.layers[net.layers.count - 1]);
         if prediction == xx label ++num_correct;
     }
-    print("Validation --- Loss: % \t Accuracy: %\n", test_loss / xx test_set_size, cast(f32)num_correct / xx test_set_size);
+    print("Validation --- loss: % \t accuracy: %\n", test_loss / xx test_set_size, cast(f32)num_correct / xx test_set_size);
 }
 
 load_into_input_layer :: (net: *Neural_Network, inputs: *f32) {
