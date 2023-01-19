@@ -25,7 +25,7 @@ MNIST_Dataset load_mnist() {
     result.y_train = (f32 *)malloc(MNIST_TRAIN_SIZE * sizeof(f32));
     for (u32 i = 0; i < MNIST_TRAIN_SIZE; ++i) {
         for (u32 j = 0; j < MNIST_IMG_BYTES; ++j) {
-            result.x_train[i * MNIST_IMG_SIZE + j] = (f32)(train_images.data[i * MNIST_IMG_SIZE + j + MNIST_IMG_INFO_LEN]) / 255.0f;
+            result.x_train[i * MNIST_IMG_BYTES + j] = (f32)(train_images.data[i * MNIST_IMG_BYTES + j + MNIST_IMG_INFO_LEN]) / 255.0f;
         }
         result.y_train[i] = (f32) train_labels.data[i + MNIST_LABEL_INFO_LEN];
     }
@@ -34,7 +34,7 @@ MNIST_Dataset load_mnist() {
     result.y_test = (f32 *)malloc(MNIST_TEST_SIZE * sizeof(f32));
     for (u32 i = 0; i < MNIST_TEST_SIZE; ++i) {
         for (u32 j = 0; j < MNIST_IMG_BYTES; ++j) {
-            result.x_test[i * MNIST_IMG_SIZE + j] = (f32)(test_images.data[i * MNIST_IMG_SIZE + j + MNIST_IMG_INFO_LEN]) / 255.0f;
+            result.x_test[i * MNIST_IMG_BYTES + j] = (f32)(test_images.data[i * MNIST_IMG_BYTES + j + MNIST_IMG_INFO_LEN]) / 255.0f;
         }
         result.y_test[i] = (f32) test_labels.data[i + MNIST_LABEL_INFO_LEN];
     }

@@ -205,7 +205,7 @@ void train(Neural_Network *net, u64 epochs) {
         printf("Epoch %llu\n", i);
         for (u32 j = 0; j < dataset_size; ++j) {
             f32 label = y_train[j];
-            load_into_input_layer(net, &x_train[j]);
+            load_into_input_layer(net, &x_train[j * MNIST_IMG_BYTES]);
             loss += forward_propagate(net, label);
             if (j % batch_size == 0) {
                 Layer *last_layer = &net->layers[net->num_layers - 1];
