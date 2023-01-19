@@ -22,7 +22,7 @@ Neural_Network :: struct {
 }
 
 get_random_f32_zero_to_one :: () -> f32 {
-    return cast(f32) rand() / xx RAND_MAX;
+    return (cast(f32) rand() / xx RAND_MAX) - 0.5;
 }
 
 
@@ -78,11 +78,6 @@ softmax :: (layer: *Layer, prev_layer: *Layer, label: f32) -> f32 {
     return loss;
 }
 
-abs_f64 :: (x: f32) -> f32 {
-    if x < 0 return -x;
-    return x;
-}
-
 init_neural_network :: (net: *Neural_Network) {
     net.num_hidden_layers = HIDDEN_LAYERS;
     net.num_neurons_per_hidden_layer = NEURONS_PER_HIDDEN_LAYER;
@@ -123,13 +118,14 @@ init_neural_network :: (net: *Neural_Network) {
 
 train :: (net: *Neural_Network, epochs: u64) {
     dataset := load_mnist();
-    x_train := *dataset.x_train[0];
-    y_train := *dataset.y_train[0];
-    dataset_size := 5000;
+    x_train := dataset.x_train.data;
+    y_train := dataset.y_train.data;
+    dataset_size := 60000;
 
-    loss: f32 = 0.0;
+    loss: f32 = 0;
     batch_size := dataset_size / 10;
     for i: u64 = 0; i < epochs; ++i {
+        print("Epoch: %\n", i);
         for j := 0; j < dataset_size; ++j {
             label := y_train[j];
             load_into_input_layer(net, *x_train[j]);
@@ -143,6 +139,20 @@ train :: (net: *Neural_Network, epochs: u64) {
             back_propagate(net, label);
         }
     }
+
+    x_test := dataset.x_test.data;
+    y_test := dataset.y_test.data;
+    test_set_size := 10000;
+    test_loss: f32 = 0;
+    num_correct := 0;
+    for i := 0; i < test_set_size; ++i {
+        label := y_train[i];
+        load_into_input_layer(net, *x_test[i]);
+        test_loss += forward_propagate(net, label);
+        prediction := layer_argmax(*net.layers[net.layers.count - 1]);
+        if prediction == xx label ++num_correct;
+    }
+    print("Validation --- Loss: % \t Accuracy: %\n", test_loss / xx test_set_size, cast(f32)num_correct / xx test_set_size);
 }
 
 load_into_input_layer :: (net: *Neural_Network, inputs: *f32) {
@@ -150,6 +160,18 @@ load_into_input_layer :: (net: *Neural_Network, inputs: *f32) {
     for i := 0; i < input_layer.num_neurons; ++i {
         input_layer.activations[i] = inputs[i];
     }
+}
+
+layer_argmax :: (layer: *Layer) -> u64 {
+    max := layer.activations[0];
+    max_idx := 0;
+    for i := 1; i < layer.num_neurons; ++i {
+        if layer.activations[i] > max {
+            max = layer.activations[i];
+            max_idx = i;
+        }
+    }
+    return max_idx;
 }
 
 forward_propagate :: (net: *Neural_Network, label: f32) -> f32 {
