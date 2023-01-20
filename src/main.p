@@ -101,10 +101,16 @@ main :: () -> s64 {
             if mouse_x >= grid_x && mouse_x < grid_x + 28 * cell_size {
                 cell_x := (mouse_x - grid_x) / cell_size;
                 cell_y := (mouse_y - grid_y) / cell_size;
-                for i := cell_y - 1; i <= cell_y + 1; ++i {
-                    for j := cell_x - 1; j <= cell_x + 1; ++j {
-                        if i >= 0 && i < 28 && j >= 0 && j < 28 {
-                            state.grid[i][j] = 1;
+                if state.grid[cell_y][cell_x] < 1.0 {
+                    for i := cell_y - 1; i <= cell_y + 1; ++i {
+                        for j := cell_x - 1; j <= cell_x + 1; ++j {
+                            if i >= 0 && i < 28 && j >= 0 && j < 28 {
+                                if i != cell_y && j != cell_x {
+                                    state.grid[i][j] = minf(1, state.grid[i][j] + 0.6);
+                                } else {
+                                    state.grid[i][j] = 1;
+                                }
+                            }
                         }
                     }
                 }
