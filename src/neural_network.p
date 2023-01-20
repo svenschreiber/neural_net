@@ -130,15 +130,19 @@ train :: (net: *Neural_Network, epochs: u64) {
     print("Evaluation --- loss: % \t acc: %\n", test_loss, test_acc);
 }
 
+predict :: (net: *Neural_Network, data: *f32) -> u64 {
+    load_into_input_layer(net, data);
+    forward_propagate(net);
+    return layer_argmax(*net.layers[net.layers.count - 1]);
+}
+
 test_evaluate :: (net: *Neural_Network, x_test: []f32, y_test: []f32) -> f32, f32 {
     test_loss: f32 = 0.0;
     num_correct := 0;
     for i := 0; i < y_test.count; ++i {
         label := y_test[i];
-        load_into_input_layer(net, *x_test[i * MNIST_IMG_BYTES]);
-        forward_propagate(net);
+        prediction := predict(net, mnist_get_image(i, x_test));
         test_loss += cross_entropy_loss(*net.layers[net.layers.count - 1], xx label);
-        prediction := layer_argmax(*net.layers[net.layers.count - 1]);
         if prediction == xx label ++num_correct;
     }
     return test_loss / xx y_test.count, cast(f32)num_correct / xx y_test.count;
