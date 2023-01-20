@@ -72,7 +72,7 @@ main :: () -> s64 {
     init_neural_network(*net);
     params: Train_Params;
     params.net = *net;
-    params.epochs = 20;
+    params.epochs = 10;
     thread := start_thread(thread_train, xx *params);
 
     glClearColor(0.2, 0.2, 0.25, 1);
