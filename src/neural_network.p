@@ -25,8 +25,6 @@ get_random_f32_zero_to_one :: () -> f32 {
     return (cast(f32) rand() / xx RAND_MAX) - 0.5;
 }
 
-
-/* Activation functions */
 relu :: (x: f32) -> f32 {
     if (x < 0.0) return 0.0; 
     return x;
@@ -46,7 +44,7 @@ sigmoid_prime :: (x: f32) -> f32 {
 }
 
 softmax :: (layer: *Layer, prev_layer: *Layer) {
-    // get max for stability
+    // get max for numerical stability
     max := layer.activations[0];
     for i := 1; i < layer.num_neurons; ++i {
         if layer.activations[i] > max {
@@ -54,14 +52,12 @@ softmax :: (layer: *Layer, prev_layer: *Layer) {
         }
     }
 
-    // calc exp sum
     exp_sum: f32 = 0.0;
     for i := 0; i < layer.num_neurons; ++i {
         layer.activations[i] = expf(layer.activations[i] - max);
         exp_sum += layer.activations[i];
     }
 
-    // calc softmax for each neuron
     for i := 0; i < layer.num_neurons; ++i {
         layer.activations[i] /= exp_sum;
     }
@@ -95,14 +91,13 @@ init_neural_network :: (net: *Neural_Network) {
         
         layer.activations   = xx malloc(layer.num_neurons * size_of(f32));
         layer.weights       = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f32));
-        layer.delta_weights = xx malloc(layer.num_neurons * prev_layer.num_neurons * size_of(f32));
+        layer.delta_weights = xx calloc(layer.num_neurons * prev_layer.num_neurons, size_of(f32));
         layer.errors        = xx malloc(layer.num_neurons * size_of(f32)); 
         layer.biases        = xx malloc(layer.num_neurons * size_of(f32)); 
 
         for j := 0; j < layer.num_neurons; ++j {
             for k := 0; k < prev_layer.num_neurons; ++k {
                 layer.weights[j * prev_layer.num_neurons + k] = get_random_f32_zero_to_one();
-                layer.delta_weights[j * prev_layer.num_neurons + k] = 0.0;
             }
             layer.biases[j] = get_random_f32_zero_to_one();
         }
@@ -111,35 +106,34 @@ init_neural_network :: (net: *Neural_Network) {
 
 train :: (net: *Neural_Network, epochs: u64) {
     dataset := load_mnist();
-    x_train := dataset.x_train.data;
-    y_train := dataset.y_train.data;
-    dataset_size := 60000;
+    x_train := dataset.x_train;
+    y_train := dataset.y_train;
 
     loss: f32 = 0;
-    batch_size := dataset_size / 10;
+    update_interval := 6000;
     for i: u64 = 0; i < epochs; ++i {
         print("Epoch: %\n", i);
-        for j := 0; j < dataset_size; ++j {
-            label := y_train[j];
-            load_into_input_layer(net, *x_train[j * MNIST_IMG_BYTES]);
+        for j := 0; j < y_train.count; ++j {
+            label := mnist_get_label(j, y_train);
+            load_into_input_layer(net, mnist_get_image(j, x_train));
             forward_propagate(net);
             loss += cross_entropy_loss(*net.layers[net.layers.count - 1], xx label);
-            if j % batch_size == 0 {
+            if j % update_interval == 0 {
                 last_layer := *net.layers[net.layers.count - 1];
-                print("loss: % \t ground-truth: % \t certainty: %\n", loss / xx batch_size, label, last_layer.activations[cast(s32)label]);
+                print("loss: % \t ground-truth: % \t certainty: %\n", loss / xx update_interval, label, last_layer.activations[cast(s32)label]);
                 loss = 0.0;
             }
-
             back_propagate(net, label);
         }
     }
+    test_loss, test_acc := test_evaluate(net, dataset.x_test, dataset.y_test);
+    print("Evaluation --- loss: % \t acc: %\n", test_loss, test_acc);
+}
 
-    x_test := dataset.x_test.data;
-    y_test := dataset.y_test.data;
-    test_set_size := 10000;
-    test_loss: f32 = 0;
+test_evaluate :: (net: *Neural_Network, x_test: []f32, y_test: []f32) -> f32, f32 {
+    test_loss: f32 = 0.0;
     num_correct := 0;
-    for i := 0; i < test_set_size; ++i {
+    for i := 0; i < y_test.count; ++i {
         label := y_test[i];
         load_into_input_layer(net, *x_test[i * MNIST_IMG_BYTES]);
         forward_propagate(net);
@@ -147,7 +141,7 @@ train :: (net: *Neural_Network, epochs: u64) {
         prediction := layer_argmax(*net.layers[net.layers.count - 1]);
         if prediction == xx label ++num_correct;
     }
-    print("Validation --- loss: % \t accuracy: %\n", test_loss / xx test_set_size, cast(f32)num_correct / xx test_set_size);
+    return test_loss / xx y_test.count, cast(f32)num_correct / xx y_test.count;
 }
 
 load_into_input_layer :: (net: *Neural_Network, inputs: *f32) {

@@ -31,8 +31,8 @@ Neural Network:
 
 MNIST Loader:
 - [x] load test/training set
-- [ ] make api better
-- [ ] cleanup code
+- [x] make api better
+- [x] cleanup code
 
 Math:
 - [ ] extend matrix math implementation
