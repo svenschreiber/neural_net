@@ -76,7 +76,7 @@ paint_cells :: (state: *State, cell: Point) {
 
 main :: () -> s64 {
     window: Window = ---;
-    create_window(*window, "neural_net", 1280, 900);
+    create_window(*window, "MNIST Classifier", 1280, 900);
     create_gl_context(*window);
     load_gl_procedures();
     load_custom_gl_procedures();
