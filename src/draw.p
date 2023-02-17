@@ -8,6 +8,18 @@ draw_quad :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: f32, color: v
     draw_vertex_array(vao);
 }
 
+draw_textured_rect :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: v2f, texture: GLuint) {
+    transformation_matrix := m4f_identity();
+    m4f_translate(*transformation_matrix, v3f(pos.x, pos.y, 0));
+    m4f_scale_xy(*transformation_matrix, scale.x, scale.y);
+    use_shader(shader);
+    shader_set_mat4(shader, "transformation", transformation_matrix);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    use_vertex_array(vao);
+    draw_vertex_array(vao);
+}
+
 draw_circle :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, radius: f32, color: v4f) {
     center := v2f(pos.x, pos.y);
     transformation_matrix := m4f_identity();
@@ -53,6 +65,16 @@ draw_line :: (vao: *Vertex_Array, shader: GLuint, p1: v2f, p2: v2f, color: v4f, 
     draw_vertex_array(vao);
 }
 
+draw_text :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, font: *Font, text: string) {
+    x_pos := pos.x;
+    for i := 0; i < text.count; ++i {
+        codepoint := text[i];
+        g := *font.glyphs[codepoint];
+        draw_textured_rect(vao, shader, v2f(x_pos + xx g.bearing.x, pos.y - xx g.bearing.y), v2f(xx g.size.x, xx g.size.y), g.texture);
+        x_pos += xx g.advance.x;
+    }
+}
+
 create_quad_vao :: () -> Vertex_Array {
     positions: [12]f32 = {
         0, 1,
@@ -66,6 +88,25 @@ create_quad_vao :: () -> Vertex_Array {
     vao := create_vertex_array();
     use_vertex_array(*vao);
     add_vertex_data(*vao, positions, 2);
+
+    return vao;
+}
+
+create_textured_rect_vao :: () -> Vertex_Array {
+    positions: [12]f32 = {
+        0, 1,
+        1, 1,
+        1, 0,
+        1, 0,
+        0, 0,
+        0, 1 
+    };
+
+    uv := positions;
+    vao := create_vertex_array();
+    use_vertex_array(*vao);
+    add_vertex_data(*vao, positions, 2);
+    add_vertex_data(*vao, uv, 2);
 
     return vao;
 }

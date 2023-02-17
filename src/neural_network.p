@@ -19,6 +19,7 @@ Neural_Network :: struct {
     num_hidden_layers: u32;
     num_neurons_per_hidden_layer: u32;
     num_outputs: u32;
+    training: bool;
 }
 
 get_random_f32_zero_to_one :: () -> f32 {
@@ -128,6 +129,7 @@ train :: (net: *Neural_Network, epochs: u64) {
     }
     test_loss, test_acc := test_evaluate(net, dataset.x_test, dataset.y_test);
     print("Evaluation --- loss: % \t acc: %\n", test_loss, test_acc);
+    net.training = false;
 }
 
 predict :: (net: *Neural_Network, data: *f32) -> u64 {

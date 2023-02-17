@@ -14,6 +14,8 @@
 #load "neural_network.p";
 #load "mnist.p";
 #load "files.p";
+#load "freetype/freetype.p";
+#load "font_loader.p";
 
 #load "platform/platform.p";
 #if PLATFORM == Platform.Windows {
@@ -26,6 +28,18 @@ State :: struct {
     shaders: [MAX_SHADERS]GLuint;
     num_shaders: u32;
     grid: [28][28]f32;
+}
+
+Point :: struct {
+    x: s32;
+    y: s32;
+}
+
+make_point :: (x: s32, y: s32) -> Point {
+    result: Point;
+    result.x = x;
+    result.y = y;
+    return result;
 }
 
 Train_Params :: struct {
@@ -46,6 +60,20 @@ clear_grid :: (state: *State) {
     memset(xx *state.grid[0][0], 0, MNIST_IMG_BYTES * size_of(f32));
 }
 
+paint_cells :: (state: *State, cell: Point) {
+    for i := cell.y - 1; i <= cell.y + 1; ++i {
+        for j := cell.x - 1; j <= cell.x + 1; ++j {
+            if i >= 0 && i < 28 && j >= 0 && j < 28 {
+                if i != cell.y && j != cell.x {
+                    state.grid[i][j] = minf(1, state.grid[i][j] + 0.6);
+                } else {
+                    state.grid[i][j] = 1;
+                }
+            }
+        }
+    }
+}
+
 main :: () -> s64 {
     window: Window = ---;
     create_window(*window, "neural_net", 1280, 900);
@@ -64,24 +92,36 @@ main :: () -> s64 {
     basic_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/basic.fs");
     circle_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/circle.fs");
     line_shader := add_shader(*state, "res/shaders/basic.vs", "res/shaders/line.fs");
+    basic_texture_shader := add_shader(*state, "res/shaders/basic_texture.vs", "res/shaders/basic_texture.fs");
     update_projection(*state, framebuffer_size);
     
     quad_vao := create_quad_vao();
+    textured_rect_vao := create_textured_rect_vao();
 
     net: Neural_Network;
     init_neural_network(*net);
+    net.training = true;
     params: Train_Params;
     params.net = *net;
-    params.epochs = 10;
+    params.epochs = 5;
     thread := start_thread(thread_train, xx *params);
+
+    font: Font;
+    size: u32 = 50;
+    load_font(*font, size, create_texture);
 
     glClearColor(0.2, 0.2, 0.25, 1);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
 
-    grid_x := 50;
+    grid_x := 10;
     grid_y := 10;
     cell_size := 30;
+
+    last_cell := make_point(-1, -1);
+
+    text_buffer: [16]u8;
+    last_prediction: s32 = -1;
 
     while !window.should_close {
         update_window(*window);
@@ -91,28 +131,23 @@ main :: () -> s64 {
         }
 
         if window.key_pressed[Key_Code.Space] {
-            prediction := predict(*net, *state.grid[0][0]);
-            print("Prediction: %\n", prediction);
+            if net.training {
+                print("Neural Network is still training...\n");
+            } else {
+                last_prediction = predict(*net, *state.grid[0][0]);
+                print("Prediction: %\n", last_prediction);
+            }
         }
 
         if window.button_pressed[Button_Code.Left] || window.button_held[Button_Code.Left] {
-            mouse_x := window.mouse_x;
-            mouse_y := window.mouse_y;
-            if mouse_x >= grid_x && mouse_x < grid_x + 28 * cell_size {
-                cell_x := (mouse_x - grid_x) / cell_size;
-                cell_y := (mouse_y - grid_y) / cell_size;
-                if state.grid[cell_y][cell_x] < 1.0 {
-                    for i := cell_y - 1; i <= cell_y + 1; ++i {
-                        for j := cell_x - 1; j <= cell_x + 1; ++j {
-                            if i >= 0 && i < 28 && j >= 0 && j < 28 {
-                                if i != cell_y && j != cell_x {
-                                    state.grid[i][j] = minf(1, state.grid[i][j] + 0.6);
-                                } else {
-                                    state.grid[i][j] = 1;
-                                }
-                            }
-                        }
-                    }
+            mouse := make_point(window.mouse_x, window.mouse_y);
+            mouse_in_grid := mouse.x >= grid_x && mouse.x < grid_x + 28 * cell_size;
+            if mouse_in_grid {
+                cell := make_point((mouse.x - grid_x) / cell_size, (mouse.y - grid_y) / cell_size);
+                if cell.x != last_cell.x || cell.y != last_cell.y {
+                    paint_cells(*state, cell);
+                    last_cell.x = cell.x;
+                    last_cell.y = cell.y;
                 }
             }
         }
@@ -133,6 +168,16 @@ main :: () -> s64 {
                 draw_quad(*quad_vao, basic_shader, v2f(xx (grid_x + x * cell_size), xx (grid_y + y * cell_size)), xx cell_size - 1, v4f(is_white, is_white, is_white, 1));
             }
         }
+        if net.training {
+            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 100), *font, "Training...");
+        } else if last_prediction != -1 {
+            fmt := "Prediction: %d";
+            snprintf(text_buffer, 16, xx fmt.data, last_prediction);
+            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 100), *font, make_string(xx *text_buffer[0], cstr_length(text_buffer) - 1));
+        } else {
+            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 100), *font, "Press Space to");
+            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 150), *font, "predict!");
+        }
 
         swap_gl_buffers(*window);
     }
@@ -140,4 +185,12 @@ main :: () -> s64 {
     kill_thread(thread);
     destroy_gl_context(*window);
     return 0;
+}
+
+cstr_length :: (cstr: *u8) -> u32 {
+    length: u32 = 0;
+    while cstr[length] {
+        ++length;
+    }
+    return length;
 }
