@@ -76,8 +76,8 @@ paint_cells :: (state: *State, cell: Point) {
 
 main :: () -> s64 {
     window: Window = ---;
-    create_window(*window, "MNIST Classifier", 1280, 900);
-    create_gl_context(*window);
+    create_window(*window, "MNIST Classifier", 1280, 900, WINDOW_DONT_CARE, WINDOW_DONT_CARE, false);
+    create_gl_context(*window, 3, 3);
     load_gl_procedures();
     load_custom_gl_procedures();
     set_vsync(true);
@@ -161,22 +161,22 @@ main :: () -> s64 {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // outline
-        draw_quad(*quad_vao, basic_shader, v2f(xx (grid_x - 1), xx (grid_y - 1)), xx cell_size * 28 + 1, v4f(.3, .3, .3, 1));
+        draw_quad(*quad_vao, basic_shader, make_v2f(xx (grid_x - 1), xx (grid_y - 1)), xx cell_size * 28 + 1, make_v4f(.3, .3, .3, 1));
         for y := 0; y < 28; ++y {
             for x := 0; x < 28; ++x {
                 is_white := state.grid[y][x];
-                draw_quad(*quad_vao, basic_shader, v2f(xx (grid_x + x * cell_size), xx (grid_y + y * cell_size)), xx cell_size - 1, v4f(is_white, is_white, is_white, 1));
+                draw_quad(*quad_vao, basic_shader, make_v2f(xx (grid_x + x * cell_size), xx (grid_y + y * cell_size)), xx cell_size - 1, make_v4f(is_white, is_white, is_white, 1));
             }
         }
         if net.training {
-            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 100), *font, "Training...");
+            draw_text(*textured_rect_vao, basic_texture_shader, make_v2f(875, 100), *font, "Training...");
         } else if last_prediction != -1 {
             fmt := "Prediction: %d";
             snprintf(text_buffer, 16, xx fmt.data, last_prediction);
-            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 100), *font, make_string(xx *text_buffer[0], cstr_length(text_buffer) - 1));
+            draw_text(*textured_rect_vao, basic_texture_shader, make_v2f(875, 100), *font, make_string(xx *text_buffer[0], cstr_length(text_buffer) - 1, *Default_Allocator));
         } else {
-            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 100), *font, "Press Space to");
-            draw_text(*textured_rect_vao, basic_texture_shader, v2f(875, 150), *font, "predict!");
+            draw_text(*textured_rect_vao, basic_texture_shader, make_v2f(875, 100), *font, "Press Space to");
+            draw_text(*textured_rect_vao, basic_texture_shader, make_v2f(875, 150), *font, "predict!");
         }
 
         swap_gl_buffers(*window);

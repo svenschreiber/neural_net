@@ -1,6 +1,6 @@
 draw_quad :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: f32, color: v4f) {
     transformation_matrix := m4f_identity();
-    m4f_transform(*transformation_matrix, v3f(pos.x, pos.y, 0), scale);
+    m4f_transform(*transformation_matrix, make_v3f(pos.x, pos.y, 0), scale);
     use_shader(shader);
     shader_set_mat4(shader, "transformation", transformation_matrix);
     shader_set_vec4(shader, "color", color);
@@ -10,7 +10,7 @@ draw_quad :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: f32, color: v
 
 draw_textured_rect :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: v2f, texture: GLuint) {
     transformation_matrix := m4f_identity();
-    m4f_translate(*transformation_matrix, v3f(pos.x, pos.y, 0));
+    m4f_translate(*transformation_matrix, make_v3f(pos.x, pos.y, 0));
     m4f_scale_xy(*transformation_matrix, scale.x, scale.y);
     use_shader(shader);
     shader_set_mat4(shader, "transformation", transformation_matrix);
@@ -21,9 +21,9 @@ draw_textured_rect :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, scale: v2f,
 }
 
 draw_circle :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, radius: f32, color: v4f) {
-    center := v2f(pos.x, pos.y);
+    center := make_v2f(pos.x, pos.y);
     transformation_matrix := m4f_identity();
-    m4f_transform(*transformation_matrix, v3f(pos.x - radius, pos.y - radius, 0), 2 * radius);
+    m4f_transform(*transformation_matrix, make_v3f(pos.x - radius, pos.y - radius, 0), 2 * radius);
     use_shader(shader);
     shader_set_mat4(shader, "transformation", transformation_matrix);
     shader_set_vec4(shader, "color", color);
@@ -48,7 +48,7 @@ draw_line :: (vao: *Vertex_Array, shader: GLuint, p1: v2f, p2: v2f, color: v4f, 
 
     // the margin is needed to include rounded tails
     margin := line_width + 1;
-    top_left := v3f(p1.x - margin, minf(p1.y, p2.y) - margin, 0);
+    top_left := make_v3f(p1.x - margin, minf(p1.y, p2.y) - margin, 0);
     rect_width := p2.x - p1.x + margin * 2;
     rect_height := abs(p2.y - p1.y) + margin * 2;
 
@@ -70,7 +70,7 @@ draw_text :: (vao: *Vertex_Array, shader: GLuint, pos: v2f, font: *Font, text: s
     for i := 0; i < text.count; ++i {
         codepoint := text[i];
         g := *font.glyphs[codepoint];
-        draw_textured_rect(vao, shader, v2f(x_pos + xx g.bearing.x, pos.y - xx g.bearing.y), v2f(xx g.size.x, xx g.size.y), g.texture);
+        draw_textured_rect(vao, shader, make_v2f(x_pos + xx g.bearing.x, pos.y - xx g.bearing.y), make_v2f(xx g.size.x, xx g.size.y), g.texture);
         x_pos += xx g.advance.x;
     }
 }

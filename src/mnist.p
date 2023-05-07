@@ -25,8 +25,8 @@ load_mnist :: () -> MNIST_Dataset {
 }
 
 mnist_fill_data :: (x_data: *u8, y_data: *u8, size: u64) -> []f32, []f32 {
-    imgs := allocate_array(MNIST_IMG_BYTES * size, f32);
-    labels := allocate_array(size, f32);
+    imgs := allocate_array(*Default_Allocator, MNIST_IMG_BYTES * size, f32);
+    labels := allocate_array(*Default_Allocator, size, f32);
     for i := 0; i < size; ++i {
         for j := 0; j < MNIST_IMG_BYTES; ++j {
             imgs[i * MNIST_IMG_BYTES + j] = xx x_data[i * MNIST_IMG_BYTES + j + MNIST_IMG_INFO_LEN] / 255.0;

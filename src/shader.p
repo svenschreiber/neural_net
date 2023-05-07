@@ -1,8 +1,8 @@
 load_shader_from_file :: (path: string, type: GLenum) -> GLuint {
     shader_source, _ := read_file(path);
     shader := glCreateShader(xx type);
-    shader_source_cstr := to_cstring(shader_source);
-    defer free_cstring(shader_source_cstr);
+    shader_source_cstr := to_cstring(shader_source, *Default_Allocator);
+    defer free_cstring(shader_source_cstr, *Default_Allocator);
     glShaderSource(shader, 1, xx *shader_source_cstr, null);
     glCompileShader(shader);
 
@@ -12,7 +12,7 @@ load_shader_from_file :: (path: string, type: GLenum) -> GLuint {
         max_length: GLint = 0;
         glGetShaderiv(shader, GL_INFO_LOG_LENGTH, *max_length);
         error_log: cstring = xx malloc(max_length * size_of(GLchar));
-        defer free_cstring(error_log);
+        defer free_cstring(error_log, *Default_Allocator);
         glGetShaderInfoLog(shader, max_length, *max_length, error_log);
         print("%\n", error_log);
         glDeleteShader(shader);
@@ -38,7 +38,7 @@ load_shader_program :: (vertex_shader_path: string, fragment_shader_path: string
         max_length: GLint = 0;
         glGetProgramiv(program, GL_INFO_LOG_LENGTH, *max_length);
         error_log: cstring = xx malloc(max_length * size_of(GLchar));
-        defer free_cstring(error_log);
+        defer free_cstring(error_log, *Default_Allocator);
         glGetProgramInfoLog(program, max_length, *max_length, error_log);
         print("%\n", error_log);
         glDeleteProgram(program);
@@ -75,8 +75,8 @@ use_shader :: (shader: GLuint) {
 }
 
 get_uniform_location :: (shader: GLuint, name: string) -> GLint {
-    name_cstr := to_cstring(name);
-    defer free_cstring(name_cstr);
+    name_cstr := to_cstring(name, *Default_Allocator);
+    defer free_cstring(name_cstr, *Default_Allocator);
     loc := glGetUniformLocation(shader, name_cstr);
     if loc == -1 {
         //print("The uniform '%' is never used or does not exist.\n", name);

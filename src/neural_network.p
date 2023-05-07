@@ -75,7 +75,7 @@ init_neural_network :: (net: *Neural_Network) {
 
     srand(time(null));
 
-    net.layers = allocate_array(HIDDEN_LAYERS + 2, Layer);
+    net.layers = allocate_array(*Default_Allocator, HIDDEN_LAYERS + 2, Layer);
     layers := net.layers;
 
     // Initialize the input layer
